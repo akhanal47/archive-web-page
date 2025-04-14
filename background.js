@@ -27,38 +27,47 @@ async function createArchivePage(uri, act) {
         return;
     }
 
-    switch (tabOption) {
-        case 1:
-            chrome.tabs.create({
-                url: INVOKEURL + encodeURIComponent(uri),
-                index: 999, // CLAMPED TO END BY BROWSER
-                openerTabId: currentTab.id,
-                active: act
-            });
-            break;
-        case 2:
-            if (currentTab.id){
-                chrome.tabs.update(currentTab.id, {
-                    url: INVOKEURL + encodeURIComponent(uri)
-                });
-            }
-            else{
-                console.error("Update tab failed: tab ID not found.");
-                chrome.tabs.create({ url: INVOKEURL + encodeURIComponent(uri),
-                    active: act,
-                    index: currentTab.index !== undefined ? currentTab.index + 1 : undefined,
-                    openerTabId: currentTab.id
-                 });
-            }
-            break;
-        default:
-            chrome.tabs.create({
-                url: INVOKEURL + encodeURIComponent(uri),
-                index: currentTab.index !== undefined ? currentTab.index + 1 : undefined,
-                openerTabId: currentTab.id,
-                active: act
-            });
-        };
+    // Since the tabOption is hardcoded to 0, create a new tab and set it to active
+    chrome.tabs.create({
+        url: INVOKEURL + encodeURIComponent(uri),
+        index: currentTab.index !== undefined ? currentTab.index + 1 : undefined,
+        openerTabId: currentTab.id,
+        active: act
+    });
+
+    // the below switch statement code is for future use, where a user can dictate the tabOption
+    // switch (tabOption) {
+    //     case 1:
+    //         chrome.tabs.create({
+    //             url: INVOKEURL + encodeURIComponent(uri),
+    //             index: 999, // CLAMPED TO END BY BROWSER
+    //             openerTabId: currentTab.id,
+    //             active: act
+    //         });
+    //         break;
+    //     case 2:
+    //         if (currentTab.id){
+    //             chrome.tabs.update(currentTab.id, {
+    //                 url: INVOKEURL + encodeURIComponent(uri)
+    //             });
+    //         }
+    //         else{
+    //             console.error("Update tab failed: tab ID not found.");
+    //             chrome.tabs.create({ url: INVOKEURL + encodeURIComponent(uri),
+    //                 active: act,
+    //                 index: currentTab.index !== undefined ? currentTab.index + 1 : undefined,
+    //                 openerTabId: currentTab.id
+    //              });
+    //         }
+    //         break;
+    //     default:
+    //         chrome.tabs.create({
+    //             url: INVOKEURL + encodeURIComponent(uri),
+    //             index: currentTab.index !== undefined ? currentTab.index + 1 : undefined,
+    //             openerTabId: currentTab.id,
+    //             active: act
+    //         });
+    //     };
     }
     catch (error) {
         console.error('Error in createArchivePage', error);
