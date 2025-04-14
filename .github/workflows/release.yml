@@ -1,0 +1,106 @@
+name: Build and Release Archive Web Page Extension
+on:
+  push:
+    branches:
+      - main 
+    paths:
+      - 'manifest.json'
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    name: Check Manifest Version
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_version_update.outputs.should_release }}
+      version: ${{ steps.check_version_update.outputs.version }}
+    steps:
+      - name: Checkout code (previous and current)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Compare manifest.json versions
+        id: check_version_update
+        run: |
+          NEW_VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          if [ -z "$NEW_VERSION" ]; then exit 1; fi
+
+          if git cat-file -e HEAD~1 &>/dev/null; then
+            OLD_VERSION=$(git show HEAD~1:manifest.json 2>/dev/null | grep -o '"version": "[^"]*"' | cut -d'"' -f4 || echo "")
+            if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            else
+              echo "should_release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # First commit or shallow clone case
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  build-and-release:
+    name: Build and Release Extension
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Define Package Name
+        id: package_name
+        run: echo "name=archive-web-page" >> $GITHUB_OUTPUT
+
+      - name: Create Zip Archive
+        run: |
+          zip -r ${{ steps.package_name.outputs.name }}.zip . -x "*.pem"
+
+      - name: Create private key file from Secret
+        run: |
+          echo "${{ secrets.EXTENSION_PRIVATE_KEY }}" | base64 --decode > ${{ steps.package_name.outputs.name }}.pem
+          if [ ! -s "${{ steps.package_name.outputs.name }}.pem" ]; then exit 1; fi
+          
+          # Debugging info
+          echo "--- pem info---"
+          ls -l ${{ steps.package_name.outputs.name }}.pem
+          head -n 3 ${{ steps.package_name.outputs.name }}.pem
+          echo "--- end pem info ---"
+
+      - name: Create CRX Package
+        run: |
+          npm install -g crx
+          crx pack ./ -o ${{ steps.package_name.outputs.name }}.crx -p ./${{ steps.package_name.outputs.name }}.pem
+          echo "CRX creation command finished."
+
+      - name: Create CRX Package
+        run: |
+          npm install -g chrome-extension-cli
+          chrome-extension-cli pack \
+            --private-key ./${{ steps.package_name.outputs.name }}.pem \
+            --directory ./ \
+            --output-file ${{ steps.package_name.outputs.name }}.crx
+          echo "CRX creation command finished."
+
+      - name: Cleanup
+        run: rm ./${{ steps.package_name.outputs.name }}.pem
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ needs.check-version.outputs.version }}
+          tag_name: v${{ needs.check-version.outputs.version }}
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.package_name.outputs.name }}.zip
+            ${{ steps.package_name.outputs.name }}.crx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

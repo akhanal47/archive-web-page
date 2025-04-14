@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Archive Web Page",
+  "version": "0.1.0",
+  "description": "Archive webpage with archive.today",
+  "permissions": [
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "128": "assets/icon128.png"
+    },
+    "default_title": "Archive Web Page"
+  },
+  "icons": {
+    "128": "assets/icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "archive-web-page@anupk47.github.io",
+      "strict_min_version": "109.0"
+    },
+    "gecko_android": {}
+  }
+}
