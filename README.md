@@ -1,4 +1,5 @@
 Extension to access paywalled news contents via archive.today (also submit a web page to archive to archive.today)
+Now, it also supports Medium via freedium
 
 ----
 ### Manual Setup Instructions:
@@ -27,8 +28,8 @@ Watch the demo usage
 
 ----
 #### To Do:
+- [x] Add option to search a link from the context menu
 - [ ] Allow user to dictate tab behaviours
-- [ ] Add option to search a link from the context menu
 - [ ] Add option to allow user preference, such as new tab active, new tab placement etc.. (as it is on the original extension)
 
 
