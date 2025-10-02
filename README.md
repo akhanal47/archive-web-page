@@ -1,3 +1,9 @@
+## Education Purpose Disclaimer
+> This Chrome extension is developed solely for educational purposes. 
+> The Developer bears absolutely no responsibility and liability for any misuse, unauthorized use, or unlawful application of this extension by any party.
+> Users assume full responsibility for ensuring their use complies with all applicable laws, terms of service, and website policies.
+
+----
 Extension to access paywalled news contents via archive.today (also submit a web page to archive to archive.today)
 Now, it also supports Medium via freedium
 
