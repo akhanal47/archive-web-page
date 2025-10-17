@@ -15,14 +15,22 @@ async function freediumRedirect(tab) {
     const url = tab.url || "";
     const mediumDomains = ['medium.com', 'towardsdatascience.com'];
     if (mediumDomains.some(domain => url.includes(domain))) {
-      const newUrl = "https://freedium.cfd/" + url;
-      await chrome.tabs.update(tab.id, { url: newUrl });
-      return true;
+      const primaryFreediumDomain = "https://freedium.cfd/";
+      const fallbackreediumDomain = "https://freedium.testthissite.site/";
+
+      try{
+        await fetch(primaryFreediumDomain, { method: 'HEAD' });
+        const newUrl = primaryFreediumDomain + url;
+        await chrome.tabs.update(tab.id, { url: newUrl });
+        return true;
+      } catch (error) {
+        const newUrl = fallbackreediumDomain + url;
+        await chrome.tabs.update(tab.id, { url: newUrl });
+        return true;
+      }
     }
     return false;
-  }
-
-
+}
 
 // Archive page URL
 async function createArchivePage(uri, act) {
